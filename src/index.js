@@ -2,6 +2,7 @@ const express = require('express');
 
 const app = express();
 const fs = require('fs/promises');
+const crypto = require('crypto');
 
 app.use(express.json());
 
@@ -11,6 +12,10 @@ const PORT = process.env.PORT || '3001';
 // não remova esse endpoint, e para o avaliador funcionar
 app.get('/', (_request, response) => {
   response.status(HTTP_OK_STATUS).send();
+});
+
+app.listen(PORT, () => {
+  console.log('Online');
 });
 
 app.get('/talker', async (req, res) => {
@@ -35,6 +40,14 @@ app.get('/talker/:id', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log('Online');
+const validateLogin = (req, res, next) => {
+  const { email, password } = req.body;
+  if (!email) return res.status(400).json({ message: 'O campo "email" é obrigatório' });
+  if (!password) return res.status(400).json({ message: 'O campo "password" é obrigatório' });
+  next();
+};
+
+app.post('/login', validateLogin, (req, res) => {
+  const token = crypto.randomBytes(8).toString('hex');
+  res.status(200).json({ token });
 });
