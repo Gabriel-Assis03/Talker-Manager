@@ -123,6 +123,6 @@ const validateTalker = (req, res, next) => {
 };
 
 app.post('/talker', validateTalker, (req, res) => {
-  const talker = req.body;
+  const talker = { id: nextId, ...req.body };
   res.status(201).json(talker);
 });
