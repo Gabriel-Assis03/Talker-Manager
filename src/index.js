@@ -106,7 +106,21 @@ const validRate = (rate, res) => {
   }
 };
 
+const validToken = (req, res) => {
+  if (!req.headers.authorization) {
+    return res.status(401).json(
+      { message: 'Token não encontrado' },
+    ); 
+  }
+  if (req.headers.authorization.length !== 16) {
+    return res.status(401).json(
+      { message: 'Token inválido' },
+    ); 
+  }
+};
+
 const validateTalker = (req, res, next) => {
+  validToken(req, res);
   const { name, age, talk } = req.body;
   if (!talk) return res.status(400).json({ message: 'O campo "talk" é obrigatório' });
   const { watchedAt, rate } = talk;
