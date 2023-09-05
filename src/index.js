@@ -10,9 +10,11 @@ app.use(express.json());
 const HTTP_OK_STATUS = 200;
 const PORT = process.env.PORT || '3001';
 const nextId = 1;
+let talkers1 = '';
 
 const getTalkers = async () => {
   const data = await fs.readFile('./src/talker.json', { encoding: 'utf-8' });
+  talkers1 = JSON.parse(data);
   return JSON.parse(data);
 };
 
@@ -133,10 +135,26 @@ const validateTalker = (req, res, next) => {
   validAge(age, res);
   validWatchedAt(watchedAt, res);
   validRate(rate, res);
+  getTalkers();
   next();
 };
 
 app.post('/talker', validateTalker, (req, res) => {
   const talker = { id: nextId, ...req.body };
   res.status(201).json(talker);
+});
+
+app.put('/talker/:id', validateTalker, (req, res) => {
+  const id = Number(req.params.id);
+  const talker = talkers1.find((t) => t.id === id);
+  if (talker) {
+    const index = talkers1.indexOf(talker);
+    const updated = { id, ...req.body };
+    talkers1.splice(index, 1, updated);
+    res.status(200).json(updated);
+  } else {
+    res.status(404).json(
+      { message: 'Pessoa palestrante não encontrada' },
+    );
+  }
 });
