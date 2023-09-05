@@ -158,3 +158,15 @@ app.put('/talker/:id', validateTalker, (req, res) => {
     );
   }
 });
+
+app.delete('/talker/:id', (req, res) => {
+  validToken(req, res);
+  getTalkers();
+  const id = Number(req.params.id);
+  const talker = talkers1.find((t) => t.id === id);
+  if (talker) {
+    const index = talkers1.indexOf(talker);
+    talkers1.splice(index, 1);
+  }
+  res.sendStatus(204);
+});
