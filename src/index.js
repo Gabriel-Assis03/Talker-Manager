@@ -9,7 +9,7 @@ app.use(express.json());
 
 const HTTP_OK_STATUS = 200;
 const PORT = process.env.PORT || '3001';
-let nextId = 1;
+const nextId = 1;
 
 const getTalkers = async () => {
   const data = await fs.readFile('./src/talker.json', { encoding: 'utf-8' });
