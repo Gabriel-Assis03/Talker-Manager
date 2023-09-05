@@ -9,6 +9,12 @@ app.use(express.json());
 
 const HTTP_OK_STATUS = 200;
 const PORT = process.env.PORT || '3001';
+let nextId = 1;
+
+const getTalkers = async () => {
+  const data = await fs.readFile('./src/talker.json', { encoding: 'utf-8' });
+  return JSON.parse(data);
+};
 
 // não remova esse endpoint, e para o avaliador funcionar
 app.get('/', (_request, response) => {
@@ -20,8 +26,7 @@ app.listen(PORT, () => {
 });
 
 app.get('/talker', async (req, res) => {
-  const data = await fs.readFile('./src/talker.json', { encoding: 'utf-8' });
-  const talkers = JSON.parse(data);
+  const talkers = await getTalkers();
   if (talkers) {
     res.status(200).json(talkers);
   } else {
@@ -30,8 +35,7 @@ app.get('/talker', async (req, res) => {
 });
 
 app.get('/talker/:id', async (req, res) => {
-  const data = await fs.readFile('./src/talker.json', { encoding: 'utf-8' });
-  const talkers = JSON.parse(data);
+  const talkers = await getTalkers();
   const id = Number(req.params.id);
   const talker = talkers.find((t) => t.id === id);
   if (talker) {
@@ -57,4 +61,68 @@ const validateLogin = (req, res, next) => {
 app.post('/login', validateLogin, (req, res) => {
   const token = crypto.randomBytes(8).toString('hex');
   res.status(200).json({ token });
+});
+
+const validName = (name, res) => {
+  if (!name) return res.status(400).json({ message: 'O campo "name" é obrigatório' });
+  if (name.length < 3) {
+    return res.status(400).json({ message: 'O "name" deve ter pelo menos 3 caracteres' });
+  }
+};
+
+function isInteger(value) {
+  return typeof value === 'number' && Math.floor(value) === value;
+}
+
+const validAge = (age, res) => {
+  if (!age) return res.status(400).json({ message: 'O campo "age" é obrigatório' });
+  if (age < 18 || !isInteger(age)) {
+    return res.status(400).json(
+      { message: 'O campo "age" deve ser um número inteiro igual ou maior que 18' },
+    );
+  }
+};
+
+function isValidDateFormat(dateString) {
+  const regex = /^\d{2}\/\d{2}\/\d{4}$/;
+  return regex.test(dateString);
+}
+
+const validWatchedAt = (watchedAt, res) => {
+  if (!watchedAt) return res.status(400).json({ message: 'O campo "watchedAt" é obrigatório' });
+  if (!isValidDateFormat(watchedAt)) {
+    return res.status(400).json(
+      { message: 'O campo "watchedAt" deve ter o formato "dd/mm/aaaa"' },
+    );
+  }
+};
+
+const validRate = (rate, res) => {
+  if (!rate) return res.status(400).json({ message: 'O campo "rate" é obrigatório' });
+  if (rate > 5 || rate < 1 || !isInteger(rate)) {
+    return res.status(400).json(
+      { message: 'O campo "rate" deve ser um número inteiro entre 1 e 5' },
+    );
+  }
+};
+
+const validateTalker = (req, res, next) => {
+  const { name, age, talk } = req.body;
+  if (!talk) return res.status(400).json({ message: 'O campo "talk" é obrigatório' });
+  const { watchedAt, rate } = talk;
+  if (rate === 0) { 
+    return res.status(400).json(
+      { message: 'O campo "rate" deve ser um número inteiro entre 1 e 5' },
+    ); 
+  }
+  validName(name, res);
+  validAge(age, res);
+  validWatchedAt(watchedAt, res);
+  validRate(rate, res);
+  next();
+};
+
+app.post('/talker', validateTalker, (req, res) => {
+  const talker = req.body;
+  res.status(201).json(talker);
 });
