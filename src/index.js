@@ -181,13 +181,15 @@ validWatchedAt, async (req, res) => {
   }
 });
 
-app.delete('/talker/:id', validToken, (req, res) => {
+app.delete('/talker/:id', validToken, async (req, res) => {
   getTalkers();
   const id = Number(req.params.id);
   const talker = talkers1.find((t) => t.id === id);
   if (talker) {
     const index = talkers1.indexOf(talker);
     talkers1.splice(index, 1);
+    const talk = JSON.stringify(talkers1, null, 2);
+    await fs.writeFile('./src/talker.json', talk);
   }
   res.sendStatus(204);
 });
